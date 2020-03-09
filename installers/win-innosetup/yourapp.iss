@@ -1,4 +1,5 @@
 ; Basic Inno Setup script.
+; (C) 2020 Mechanika Design.  All Rights Reserved.
 
 ; Adjust these defines for your app.
 #define BusinessName "Your Business or Name"
@@ -149,14 +150,14 @@ Name: "{app}\extensions"
 Name: "{app}\www"
 
 [Files]
-Source: "{#AppBase}.nova"; DestDir: "{app}"
+Source: "{#AppBase}.phpapp"; DestDir: "{app}"
 Source: "{#AppBase}.ico"; DestDir: "{app}"
 Source: "server.php"; DestDir: "{app}"
 Source: "support\*"; DestDir: "{app}\support"; Flags: createallsubdirs recursesubdirs
 Source: "extensions\*"; Excludes: "README.md"; DestDir: "{app}\extensions"; Flags: createallsubdirs recursesubdirs skipifsourcedoesntexist
 Source: "www\*"; Excludes: "README.md"; DestDir: "{app}\www"; Flags: createallsubdirs recursesubdirs
 #ifdef PHP_32
-Source: "installers\win-innosetup\php-win-32\*"; Excludes: "README.md"; DestDir: "{app}\php-32"; Check: not Is64BitInstallMode or IsTaskSelected('portablemode'); Flags: createallsubdirs recursesubdirs
+Source: "installers\win-innosetup\php-win-32\*"; Excludes: "README.md"; DestDir: "{app}\php-32"; Check: (not Is64BitInstallMode) or IsTaskSelected('portablemode'); Flags: createallsubdirs recursesubdirs
 #endif
 #ifdef PHP_64
 Source: "installers\win-innosetup\php-win-64\*"; Excludes: "README.md"; DestDir: "{app}\php-64"; Check: Is64BitInstallMode or IsTaskSelected('portablemode'); Flags: createallsubdirs recursesubdirs
@@ -167,22 +168,22 @@ Source: "installers\win-innosetup\start.bat"; DestDir: "{app}"; Check: IsTaskSel
 
 [Icons]
 #ifdef PHP_32
-Name: "{commondesktop}\{#AppName}"; Filename: "{app}\php-32\php-win.exe"; Parameters: """{app}\{#AppBase}.nova"""; WorkingDir: "{app}"; IconFilename: "{app}\{#AppBase}.ico"; Check: not Is64BitInstallMode; Tasks: desktopicon
-Name: "{group}\{#AppName}"; Filename: "{app}\php-32\php-win.exe"; Parameters: """{app}\{#AppBase}.nova"""; WorkingDir: "{app}"; IconFilename: "{app}\{#AppBase}.ico"; Check: not Is64BitInstallMode and not IsTaskSelected('portablemode')
+Name: "{commondesktop}\{#AppName}"; Filename: "{app}\php-32\php-win.exe"; Parameters: """{app}\{#AppBase}.phpapp"""; WorkingDir: "{app}"; IconFilename: "{app}\{#AppBase}.ico"; Check: not Is64BitInstallMode; Tasks: desktopicon
+Name: "{group}\{#AppName}"; Filename: "{app}\php-32\php-win.exe"; Parameters: """{app}\{#AppBase}.phpapp"""; WorkingDir: "{app}"; IconFilename: "{app}\{#AppBase}.ico"; Check: (not Is64BitInstallMode) and not IsTaskSelected('portablemode')
 #endif
 #ifdef PHP_64
-Name: "{commondesktop}\{#AppName}"; Filename: "{app}\php-64\php-win.exe"; Parameters: """{app}\{#AppBase}.nova"""; WorkingDir: "{app}"; IconFilename: "{app}\{#AppBase}.ico"; Check: Is64BitInstallMode; Tasks: desktopicon
-Name: "{group}\{#AppName}"; Filename: "{app}\php-64\php-win.exe"; Parameters: """{app}\{#AppBase}.nova"""; WorkingDir: "{app}"; IconFilename: "{app}\{#AppBase}.ico"; Check: Is64BitInstallMode and not IsTaskSelected('portablemode')
+Name: "{commondesktop}\{#AppName}"; Filename: "{app}\php-64\php-win.exe"; Parameters: """{app}\{#AppBase}.phpapp"""; WorkingDir: "{app}"; IconFilename: "{app}\{#AppBase}.ico"; Check: Is64BitInstallMode; Tasks: desktopicon
+Name: "{group}\{#AppName}"; Filename: "{app}\php-64\php-win.exe"; Parameters: """{app}\{#AppBase}.phpapp"""; WorkingDir: "{app}"; IconFilename: "{app}\{#AppBase}.ico"; Check: Is64BitInstallMode and not IsTaskSelected('portablemode')
 #endif
-Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"; Check: not IsTaskSelected('portablemode') and not IsMSI
+Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"; Check: (not IsTaskSelected('portablemode')) and not IsMSI
 
 [Registry]
 Root: HKLM; Subkey: "SOFTWARE\Inno Setup MSIs"; Check: IsMSI; AfterInstall: PrepareMSIUninstall
 
 [Run]
 #ifdef PHP_32
-Filename: "{app}\php-32\php-win.exe"; Parameters: """{app}\{#AppBase}.nova"""; Description: "Launch application"; Check: not Is64BitInstallMode and HasRedistributables; Flags: postinstall nowait skipifsilent
+Filename: "{app}\php-32\php-win.exe"; Parameters: """{app}\{#AppBase}.phpapp"""; Description: "Launch application"; Check: (not Is64BitInstallMode) and HasRedistributables; Flags: postinstall nowait skipifsilent
 #endif
 #ifdef PHP_64
-Filename: "{app}\php-64\php-win.exe"; Parameters: """{app}\{#AppBase}.nova"""; Description: "Launch application"; Check: Is64BitInstallMode and HasRedistributables; Flags: postinstall nowait skipifsilent
+Filename: "{app}\php-64\php-win.exe"; Parameters: """{app}\{#AppBase}.phpapp"""; Description: "Launch application"; Check: Is64BitInstallMode and HasRedistributables; Flags: postinstall nowait skipifsilent
 #endif
