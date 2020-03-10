@@ -1,6 +1,6 @@
 <?php
-
 // FastCGI client class.
+// (C) 2019-220 Warren Galyen. All Rights Reserved.
 
 class FastCGI {
 	protected $fp, $client, $debug;
@@ -244,17 +244,17 @@ class FastCGI {
 			);
 		}
 
-		$request                  = new stdClass();
-		$request->id              = $x;
-		$request->role            = (int) $role;
-		$request->flags           = ($keepalive ? 0x01 : 0x00);
-		$request->stdinopen       = true;
-		$request->dataopen        = ($request->role === self::ROLE_FILTER);
-		$request->stdout          = "";
-		$request->stdoutcompleted = false;
-		$request->stderr          = "";
-		$request->stderrcompleted = false;
-		$request->ended           = false;
+		$request             = new stdClass();
+		$request->id         = $x;
+		$request->role       = (int) $role;
+		$request->flags      = ($keepalive ? 0x01 : 0x00);
+		$request->stdinopen  = true;
+		$request->stdoutopen = true;
+		$request->stderropen = true;
+		$request->dataopen   = ($request->role === self::ROLE_FILTER);
+		$request->stdout     = "";
+		$request->stderr     = "";
+		$request->ended      = false;
 
 		$this->requests[$request->id] = $request;
 
@@ -309,10 +309,24 @@ class FastCGI {
 			             "errorcode" => "server_mode_only"
 			);
 		}
+		if (isset($this->requests[$requestid]) && $this->requests[$requestid]->ended) {
+			return array("success"   => false,
+			             "error"     => self::FCGITranslate("The EndRequest() function has already been called for this request."),
+			             "errorcode" => "already_ended"
+			);
+		}
 
 		// 4 bytes application status, 1 byte protocol status, 3 bytes reserved.
 		$content = pack("N", (int) $appstatus) . chr($protocolstatus) . "\x00\x00\x00";
 		$this->WriteRecord(self::RECORD_TYPE_END_REQUEST, $requestid, $content);
+
+		if (isset($this->requests[$requestid])) {
+			$this->requests[$requestid]->stdinopen  = false;
+			$this->requests[$requestid]->stdoutopen = false;
+			$this->requests[$requestid]->stderropen = false;
+			$this->requests[$requestid]->dataopen   = false;
+			$this->requests[$requestid]->ended      = true;
+		}
 
 		return array("success" => true);
 	}
@@ -346,12 +360,8 @@ class FastCGI {
 		return array("success" => true);
 	}
 
-	// Client only.
 	public function IsStdinOpen($requestid) {
 		if ($this->fp === false) {
-			return false;
-		}
-		if (!$this->client) {
 			return false;
 		}
 		if (!isset($this->requests[$requestid])) {
@@ -404,6 +414,17 @@ class FastCGI {
 		return array("success" => true);
 	}
 
+	public function IsStdoutOpen($requestid) {
+		if ($this->fp === false) {
+			return false;
+		}
+		if (!isset($this->requests[$requestid])) {
+			return false;
+		}
+
+		return $this->requests[$requestid]->stdoutopen;
+	}
+
 	// Server only.
 	public function SendStdout($requestid, $data) {
 		if ($this->fp === false) {
@@ -424,6 +445,12 @@ class FastCGI {
 			             "errorcode" => "invalid_request_id"
 			);
 		}
+		if (!$this->requests[$requestid]->stdoutopen) {
+			return array("success"   => false,
+			             "error"     => self::FCGITranslate("The specified request ID has already closed stdout."),
+			             "errorcode" => "stdout_closed"
+			);
+		}
 
 		$y = strlen($data);
 		for ($x = 0; $x + 65535 < $y; $x += 65535) {
@@ -434,7 +461,22 @@ class FastCGI {
 			$this->WriteRecord(self::RECORD_TYPE_STDOUT, $requestid, (string) substr($data, $x));
 		}
 
+		if (!$y) {
+			$this->requests[$requestid]->stdoutopen = false;
+		}
+
 		return array("success" => true);
+	}
+
+	public function IsStderrOpen($requestid) {
+		if ($this->fp === false) {
+			return false;
+		}
+		if (!isset($this->requests[$requestid])) {
+			return false;
+		}
+
+		return $this->requests[$requestid]->stderropen;
 	}
 
 	// Server only.
@@ -457,6 +499,12 @@ class FastCGI {
 			             "errorcode" => "invalid_request_id"
 			);
 		}
+		if (!$this->requests[$requestid]->stderropen) {
+			return array("success"   => false,
+			             "error"     => self::FCGITranslate("The specified request ID has already closed stderr."),
+			             "errorcode" => "stderr_closed"
+			);
+		}
 
 		$y = strlen($data);
 		for ($x = 0; $x + 65535 < $y; $x += 65535) {
@@ -467,15 +515,15 @@ class FastCGI {
 			$this->WriteRecord(self::RECORD_TYPE_STDERR, $requestid, (string) substr($data, $x));
 		}
 
+		if (!$y) {
+			$this->requests[$requestid]->stderropen = false;
+		}
+
 		return array("success" => true);
 	}
 
-	// Client only.
 	public function IsDataOpen($requestid) {
 		if ($this->fp === false) {
-			return false;
-		}
-		if (!$this->client) {
 			return false;
 		}
 		if (!isset($this->requests[$requestid])) {
@@ -489,8 +537,8 @@ class FastCGI {
 	public function SendData($requestid, $data) {
 		if ($this->fp === false) {
 			return array("success"   => false,
-			             "error"     => self::FCGITranslate("Connection not eastablished."),
-			             "errorcode" => "non_connection"
+			             "error"     => self::FCGITranslate("Connection not established."),
+			             "errorcode" => "no_connection"
 			);
 		}
 		if (!$this->client) {
@@ -508,7 +556,7 @@ class FastCGI {
 		if (!$this->requests[$requestid]->dataopen) {
 			return array("success"   => false,
 			             "error"     => self::FCGITranslate("The specified request ID has already closed the data channel."),
-			             "errorcode" => "data_closed"
+			             "errorcode" => "data_channel_closed"
 			);
 		}
 
@@ -740,16 +788,19 @@ class FastCGI {
 						continue;
 					}
 
-					$request                 = new stdClass();
-					$request->id             = $record["reqid"];
-					$request->role           = $role;
-					$request->flags          = $flags;
-					$request->abort          = false;
-					$request->params         = "";
-					$request->stdin          = "";
-					$request->stdincompleted = false;
-					$request->data           = "";
-					$request->datacompleted  = ($role !== self::ROLE_FILTER);
+					$request             = new stdClass();
+					$request->id         = $record["reqid"];
+					$request->role       = $role;
+					$request->flags      = $flags;
+					$request->abort      = false;
+					$request->stdinopen  = true;
+					$request->stdoutopen = true;
+					$request->stderropen = true;
+					$request->dataopen   = ($role === self::ROLE_FILTER);
+					$request->params     = "";
+					$request->stdin      = "";
+					$request->data       = "";
+					$request->ended      = false;
 
 					$this->requests[$request->id]      = $request;
 					$this->readyrequests[$request->id] = true;
@@ -807,13 +858,13 @@ class FastCGI {
 
 					$request = $this->requests[$record["reqid"]];
 
-					$request->stdinopen       = false;
-					$request->dataopen        = false;
-					$request->stdoutcompleted = true;
-					$request->stderrcompleted = true;
-					$request->ended           = true;
-					$request->appstatus       = unpack("N", substr($record["content"], 0, 4))[1];
-					$request->protocolstatus  = ord($record["content"]{4});
+					$request->stdinopen      = false;
+					$request->dataopen       = false;
+					$request->stdoutopen     = false;
+					$request->stderropen     = false;
+					$request->ended          = true;
+					$request->appstatus      = unpack("N", substr($record["content"], 0, 4))[1];
+					$request->protocolstatus = ord($record["content"]{4});
 
 					$this->readyrequests[$record["reqid"]] = true;
 
@@ -873,12 +924,12 @@ class FastCGI {
 					}
 
 					$request = $this->requests[$record["reqid"]];
-					if ($request->stdincompleted) {
+					if (!$request->stdinopen) {
 						continue;
 					}
 
 					if ($record["content"] === "") {
-						$request->stdincompleted = true;
+						$request->stdinopen = false;
 					} else {
 						$request->stdin .= $record["content"];
 					}
@@ -907,12 +958,12 @@ class FastCGI {
 					}
 
 					$request = $this->requests[$record["reqid"]];
-					if ($request->stdoutcompleted || $request->ended !== false) {
+					if (!$request->stdoutopen || $request->ended) {
 						continue;
 					}
 
 					if ($record["content"] === "") {
-						$request->stdoutcompleted = true;
+						$request->stdoutopen = false;
 					} else {
 						$request->stdout .= $record["content"];
 					}
@@ -941,12 +992,12 @@ class FastCGI {
 					}
 
 					$request = $this->requests[$record["reqid"]];
-					if ($request->stderrcompleted || $request->ended !== false) {
+					if (!$request->stderropen || $request->ended) {
 						continue;
 					}
 
 					if ($record["content"] === "") {
-						$request->stderrcompleted = true;
+						$request->stderropen = false;
 					} else {
 						$request->stderr .= $record["content"];
 					}
@@ -975,12 +1026,12 @@ class FastCGI {
 					}
 
 					$request = $this->requests[$record["reqid"]];
-					if ($request->datacompleted) {
+					if (!$request->dataopen) {
 						continue;
 					}
 
 					if ($record["content"] === "") {
-						$request->datacompleted = true;
+						$request->dataopen = false;
 					} else {
 						$request->data .= $record["content"];
 					}

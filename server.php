@@ -93,9 +93,10 @@ $windows = (strtoupper(substr($os, 0, 3)) == "WIN");
 if ($windows) {
 	$cgibin = dirname(PHP_BINARY) . "\\php-cgi.exe";
 	if (!file_exists($cgibin)) {
-		WriteStartupInfo(array("success"   => false,
-		                       "error"     => "Unable to start server due to missing executable.  Expected 'php-cgi.exe'.",
-		                       "errorcode" => "missing_php_cgi"
+		WriteStartupInfo(array(
+			"success"   => false,
+			"error"     => "Unable to start server due to missing executable.  Expected 'php-cgi.exe'.",
+			"errorcode" => "missing_php_cgi"
 		));
 	}
 	$cgibin = escapeshellarg($cgibin);
@@ -111,9 +112,10 @@ if ($windows) {
 		$fpmbin = ProcessHelper::FindExecutable("php-fpm", "/usr/sbin");
 //			$fpmbin = ProcessHelper::FindExecutable("php-fpm7.2", "/usr/sbin");
 		if ($fpmbin === false) {
-			WriteStartupInfo(array("success"   => false,
-			                       "error"     => "Unable to start server due to missing executable.  Expected 'php-cgi' or 'php-fpm'.",
-			                       "errorcode" => "missing_php_cgi"
+			WriteStartupInfo(array(
+				"success"   => false,
+				"error"     => "Unable to start server due to missing executable.  Expected 'php-cgi' or 'php-fpm'.",
+				"errorcode" => "missing_php_cgi"
 			));
 		}
 
@@ -145,14 +147,16 @@ if ($windows) {
 
 		// Start PHP-FPM.
 		$cmd     = escapeshellarg($fpmbin) . " -p " . escapeshellarg($fpmdir) . " --fpm-config " . escapeshellarg($fpmdir . "/php-fpm.conf") . " -F -R";
-		$fpminfo = ProcessHelper::StartProcess($cmd, array("stdin"  => false,
-		                                                   "stdout" => false,
-		                                                   "stderr" => $fpmdir . "/stderr.log"
+		$fpminfo = ProcessHelper::StartProcess($cmd, array(
+			"stdin"  => false,
+			"stdout" => false,
+			"stderr" => $fpmdir . "/stderr.log"
 		));
 		if (!$fpminfo["success"]) {
-			WriteStartupInfo(array("success"   => false,
-			                       "error"     => "Unable to start PHP-FPM.  Process failed to start.",
-			                       "errorcode" => "php_fpm_startup_failed"
+			WriteStartupInfo(array(
+				"success"   => false,
+				"error"     => "Unable to start PHP-FPM.  Process failed to start.",
+				"errorcode" => "php_fpm_startup_failed"
 			));
 		}
 
@@ -162,9 +166,10 @@ if ($windows) {
 
 			$pinfo = @proc_get_status($fpminfo["proc"]);
 			if (!$pinfo["running"]) {
-				WriteStartupInfo(array("success"   => false,
-				                       "error"     => "Unable to start PHP-FPM.  Process terminated prematurely.",
-				                       "errorcode" => "php_fpm_startup_failed"
+				WriteStartupInfo(array(
+					"success"   => false,
+					"error"     => "Unable to start PHP-FPM.  Process terminated prematurely.",
+					"errorcode" => "php_fpm_startup_failed"
 				));
 			}
 		}
@@ -177,9 +182,10 @@ if ($windows) {
 		$fcgi   = new FastCGI();
 		$result = $fcgi->Connect("unix://" . $fpmdir . "/php-fpm.sock");
 		if (!$result["success"]) {
-			WriteStartupInfo(array("success"   => false,
-			                       "error"     => "PHP-FPM started successfully but attempting to connect to the UNIX socket failed.",
-			                       "errorcode" => "fastcgi_connect_failed"
+			WriteStartupInfo(array(
+				"success"   => false,
+				"error"     => "PHP-FPM started successfully but attempting to connect to the UNIX socket failed.",
+				"errorcode" => "fastcgi_connect_failed"
 			));
 		}
 
@@ -197,9 +203,10 @@ if ($windows) {
 		}
 
 		if (!$fcgi->GetRecvRecords()) {
-			WriteStartupInfo(array("success"   => false,
-			                       "error"     => "PHP-FPM started and the first connection was successful but attempting to retrieve FastCGI information failed.",
-			                       "errorcode" => "fastcgi_info_retrieval_failed"
+			WriteStartupInfo(array(
+				"success"   => false,
+				"error"     => "PHP-FPM started and the first connection was successful but attempting to retrieve FastCGI information failed.",
+				"errorcode" => "fastcgi_info_retrieval_failed"
 			));
 		}
 
@@ -214,14 +221,15 @@ if ($windows) {
 }
 
 function InitClientAppData() {
-	return array("currext"  => false,
-	             "url"      => false,
-	             "path"     => false,
-	             "cgi"      => false,
-	             "fcgi"     => false,
-	             "file"     => false,
-	             "respcode" => 200,
-	             "respmsg"  => "OK"
+	return array(
+		"currext"  => false,
+		"url"      => false,
+		"path"     => false,
+		"cgi"      => false,
+		"fcgi"     => false,
+		"file"     => false,
+		"respcode" => 200,
+		"respmsg"  => "OK"
 	);
 }
 
@@ -466,14 +474,15 @@ function WriteAccessLog($trace, $ipaddr, $request, $stats, $info) {
 	global $accessfp, $accessfpnum;
 
 	$accessfpnum ++;
-	fwrite($accessfp, json_encode(array("#"     => $accessfpnum,
-	                                    "ts"    => time(),
-	                                    "gmt"   => gmdate("Y-m-d H:i:s"),
-	                                    "trace" => $trace,
-	                                    "ip"    => $ipaddr,
-	                                    "req"   => $request,
-	                                    "stats" => $stats,
-	                                    "info"  => $info
+	fwrite($accessfp, json_encode(array(
+			"#"     => $accessfpnum,
+			"ts"    => time(),
+			"gmt"   => gmdate("Y-m-d H:i:s"),
+			"trace" => $trace,
+			"ip"    => $ipaddr,
+			"req"   => $request,
+			"stats" => $stats,
+			"info"  => $info
 		), JSON_UNESCAPED_SLASHES) . "\n");
 	fflush($accessfp);
 
@@ -496,13 +505,14 @@ function WriteErrorLog($trace, $ipaddr, $request, $info) {
 	global $errorfp, $errorfpnum;
 
 	$errorfpnum ++;
-	fwrite($errorfp, json_encode(array("#"     => $errorfpnum,
-	                                   "ts"    => time(),
-	                                   "gmt"   => gmdate("Y-m-d H:i:s"),
-	                                   "trace" => $trace,
-	                                   "ip"    => $ipaddr,
-	                                   "req"   => $request,
-	                                   "info"  => $info
+	fwrite($errorfp, json_encode(array(
+			"#"     => $errorfpnum,
+			"ts"    => time(),
+			"gmt"   => gmdate("Y-m-d H:i:s"),
+			"trace" => $trace,
+			"ip"    => $ipaddr,
+			"req"   => $request,
+			"info"  => $info
 		), JSON_UNESCAPED_SLASHES) . "\n");
 	fflush($errorfp);
 }
@@ -544,9 +554,10 @@ if ($windows) {
 		} else if (getenv("ALLUSERSPROFILE") !== false) {
 			$pfilespath = getenv("ALLUSERSPROFILE");
 		} else {
-			WriteStartupInfo(array("success"   => false,
-			                       "error"     => "Unable to start server due to missing environment variables.  Expected 'ProgramData' or 'ALLUSERSPROFILE'.",
-			                       "errorcode" => "missing_environment_var"
+			WriteStartupInfo(array(
+				"success"   => false,
+				"error"     => "Unable to start server due to missing environment variables.  Expected 'ProgramData' or 'ALLUSERSPROFILE'.",
+				"errorcode" => "missing_environment_var"
 			));
 		}
 
@@ -555,9 +566,10 @@ if ($windows) {
 		} else if (getenv("APPDATA") !== false) {
 			$ufilespath = getenv("APPDATA");
 		} else {
-			WriteStartupInfo(array("success"   => false,
-			                       "error"     => "Unable to start server due to missing environment variables.  Expected 'LOCALAPPDATA' or 'APPDATA'.",
-			                       "errorcode" => "missing_environment_var"
+			WriteStartupInfo(array(
+				"success"   => false,
+				"error"     => "Unable to start server due to missing environment variables.  Expected 'LOCALAPPDATA' or 'APPDATA'.",
+				"errorcode" => "missing_environment_var"
 			));
 		}
 	}
@@ -569,9 +581,10 @@ if ($windows) {
 		$path = "/root";
 	} else {
 		if (getenv("HOME") === false) {
-			WriteStartupInfo(array("success"   => false,
-			                       "error"     => "Unable to start server due to missing environment variable.  Expected 'HOME'.",
-			                       "errorcode" => "missing_environment_var"
+			WriteStartupInfo(array(
+				"success"   => false,
+				"error"     => "Unable to start server due to missing environment variable.  Expected 'HOME'.",
+				"errorcode" => "missing_environment_var"
 			));
 		}
 
@@ -579,9 +592,10 @@ if ($windows) {
 		$path = rtrim($path, "/");
 
 		if (function_exists("posix_geteuid") && fileowner($path . "/") !== posix_geteuid()) {
-			WriteStartupInfo(array("success"   => false,
-			                       "error"     => "Unable to start server due to mismatched user.  The path of the 'HOME' environment variable does not match the effective user ID.",
-			                       "errorcode" => "mismatched_environment_var"
+			WriteStartupInfo(array(
+				"success"   => false,
+				"error"     => "Unable to start server due to mismatched user.  The path of the 'HOME' environment variable does not match the effective user ID.",
+				"errorcode" => "mismatched_environment_var"
 			));
 		}
 	}
@@ -625,10 +639,10 @@ $ufilespath .= "/" . $appname;
 @mkdir($ufilespath . "/www", 0770, true);
 
 $baseenv["DOCUMENT_ROOT_USER"] = $ufilespath . "/www";
-$baseenv["NOVA_PROG_FILES"]     = $pfilespath;
-$baseenv["NOVA_USER_FILES"]     = $ufilespath;
+$baseenv["NOVA_PROG_FILES"]    = $pfilespath;
+$baseenv["NOVA_USER_FILES"]    = $ufilespath;
 
-$rng                   = new CSPRNG();
+$rng                    = new CSPRNG();
 $baseenv["NOVA_SECRET"] = $rng->GenerateToken();
 
 if (file_exists($pfilespath . "/logs/access.log") && filesize($pfilespath . "/logs/access.log") > 10000000) {
@@ -713,7 +727,7 @@ do {
 		}
 
 		$request = $client->appdata["fcgi"]["request"];
-		if ((!$request->stdoutcompleted || !$request->stderrcompleted) && strlen($client->writedata) + strlen($request->stdout) < 262144) {
+		if (($request->stdoutopen || $request->stderropen) && strlen($client->writedata) + strlen($request->stdout) < 262144) {
 			$readfps["fcgi_recv_" . $id] = $client->appdata["fcgi"]["fp"];
 		}
 	}
@@ -1023,9 +1037,10 @@ do {
 
 						// Process the request.
 						if (!is_array($data)) {
-							$result2 = array("success"   => false,
-							                 "error"     => "Data sent was not able to be decoded.",
-							                 "errorcode" => "invalid_data"
+							$result2 = array(
+								"success"   => false,
+								"error"     => "Data sent was not able to be decoded.",
+								"errorcode" => "invalid_data"
 							);
 
 							$client->SetResponseCode(400);
@@ -1126,9 +1141,10 @@ do {
 						$client->appdata["respcode"] = 500;
 						$client->appdata["respmsg"]  = "Internal Server Error<br><br>See log file for details.";
 
-						WriteErrorLog("500 Internal Server Error - CGI headers too large", $client->ipaddr, $client->request, array("success"   => false,
-						                                                                                                            "error"     => "CGI response headers exceed 262,144 bytes.",
-						                                                                                                            "errorcode" => "cgi_headers_too_large"
+						WriteErrorLog("500 Internal Server Error - CGI headers too large", $client->ipaddr, $client->request, array(
+							"success"   => false,
+							"error"     => "CGI response headers exceed 262,144 bytes.",
+							"errorcode" => "cgi_headers_too_large"
 						));
 
 						SendHTTPErrorResponse($client);
@@ -1143,19 +1159,20 @@ do {
 					}
 
 					// When stdout and stderr are both closed, the response is complete.
-					if (!isset($client->appdata["cgi"]["pipes"][1]) && !isset($client->appdata["cgi"]["pipes"][2])) {
+					if (!$request->stdoutopen && !$request->stderropen) {
 						$client->FinalizeResponse();
 					}
-				} else if (!isset($client->appdata["cgi"]["pipes"][1]) && !isset($client->appdata["cgi"]["pipes"][2])) {
+				} else if (!$request->stdoutopen && !$request->stderropen) {
 					// For some reason, both stdout and stderr are closed and no headers were sent.
 					$client->appdata["cgi"]["stdout"] = "";
 
 					$client->appdata["respcode"] = 500;
 					$client->appdata["respmsg"]  = "Internal Server Error<br><br>See log file for details.";
 
-					WriteErrorLog("500 Internal Server Error - Invalid CGI response", $client->ipaddr, $client->request, array("success"   => false,
-					                                                                                                           "error"     => "An invalid or insufficient response was produced by the CGI program.",
-					                                                                                                           "errorcode" => "invalid_cgi_response"
+					WriteErrorLog("500 Internal Server Error - Invalid CGI response", $client->ipaddr, $client->request, array(
+						"success"   => false,
+						"error"     => "An invalid or insufficient response was produced by the CGI program.",
+						"errorcode" => "invalid_cgi_response"
 					));
 
 					SendHTTPErrorResponse($client);
@@ -1175,7 +1192,7 @@ do {
 				// Process the FastCGI queues.
 				if ($result2["success"] && !$request->ended) {
 					$cmd   = "ProcessQueues";
-					$read  = ((!$request->stdoutcompleted || !$request->stderrcompleted) && strlen($client->writedata) + strlen($request->stdout) < 262144);
+					$read  = (($request->stdoutopen || $request->stderropen) && strlen($client->writedata) + strlen($request->stdout) < 262144);
 					$write = $client->appdata["fcgi"]["conn"]->NeedsWrite();
 
 					$result2 = $client->appdata["fcgi"]["conn"]->ProcessQueues($read, $write);
@@ -1229,9 +1246,10 @@ do {
 							$client->appdata["respcode"] = 500;
 							$client->appdata["respmsg"]  = "Internal Server Error<br><br>See log file for details.";
 
-							WriteErrorLog("500 Internal Server Error - FastCGI headers too large", $client->ipaddr, $client->request, array("success"   => false,
-							                                                                                                                "error"     => "FastCGI response headers exceed 262,144 bytes.",
-							                                                                                                                "errorcode" => "fastcgi_headers_too_large"
+							WriteErrorLog("500 Internal Server Error - FastCGI headers too large", $client->ipaddr, $client->request, array(
+								"success"   => false,
+								"error"     => "FastCGI response headers exceed 262,144 bytes.",
+								"errorcode" => "fastcgi_headers_too_large"
 							));
 
 							SendHTTPErrorResponse($client);
@@ -1256,9 +1274,10 @@ do {
 						$client->appdata["respcode"] = 500;
 						$client->appdata["respmsg"]  = "Internal Server Error<br><br>See log file for details.";
 
-						WriteErrorLog("500 Internal Server Error - Invalid FastCGI response", $client->ipaddr, $client->request, array("success"   => false,
-						                                                                                                               "error"     => "An invalid or insufficient response was produced by the FastCGI program.",
-						                                                                                                               "errorcode" => "invalid_fastcgi_response"
+						WriteErrorLog("500 Internal Server Error - Invalid FastCGI response", $client->ipaddr, $client->request, array(
+							"success"   => false,
+							"error"     => "An invalid or insufficient response was produced by the FastCGI program.",
+							"errorcode" => "invalid_fastcgi_response"
 						));
 
 						SendHTTPErrorResponse($client);
@@ -1285,9 +1304,10 @@ do {
 							$client->appdata["respcode"] = 403;
 							$client->appdata["respmsg"]  = "Forbidden<br><br>See log file for details.";
 
-							WriteErrorLog("403 Forbidden - fopen()", $client->ipaddr, $client->request, array("success"   => false,
-							                                                                                  "error"     => "Unable to open '" . $filename . "' for reading.",
-							                                                                                  "errorcode" => "fopen_failed"
+							WriteErrorLog("403 Forbidden - fopen()", $client->ipaddr, $client->request, array(
+								"success"   => false,
+								"error"     => "Unable to open '" . $filename . "' for reading.",
+								"errorcode" => "fopen_failed"
 							));
 
 							SendHTTPErrorResponse($client);
