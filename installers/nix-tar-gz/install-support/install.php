@@ -1,6 +1,7 @@
 <?php
 
 // Main installer for Linux.
+// (C) 2020 Mechanika Design.  All Rights Reserved.
 
 if (!isset($_SERVER["argc"]) || !$_SERVER["argc"]) {
 	echo "This file is intended to be run from the command-line.";
@@ -200,6 +201,14 @@ system("xdg-desktop-menu install " . escapeshellarg($desktopfile));
 if ($uid && $packageinfo["user_desktop_icon"]) {
 	system("xdg-desktop-icon install " . escapeshellarg($desktopfile));
 }
+
+// Post-install script.
+if (file_exists($installpath . "/support/post-install.php"))
+{
+	echo "Finishing installation...\n";
+	system("php " . escapeshellarg($installpath . "/support/post-install.php"));
+}
+
 
 echo "Done.\n";
 ?>

@@ -1,6 +1,6 @@
 <?php
 // FastCGI client class.
-// (C) 2019-220 Warren Galyen. All Rights Reserved.
+// (C) 2020 Mechanika Design. All Rights Reserved.
 
 class FastCGI {
 	protected $fp, $client, $debug;

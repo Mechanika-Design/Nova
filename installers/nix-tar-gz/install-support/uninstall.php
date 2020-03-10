@@ -78,6 +78,11 @@ if (!is_dir($installpath)) {
 	CLI::DisplayError("Unable to find '" . $installpath . "'.");
 }
 
+// Pre-uninstall script.
+if (file_exists($installpath . "/support/pre-uninstall.php")) {
+	system("php " . escapeshellarg($installpath . "/support/pre-uninstall.php"));
+}
+
 $vendorappname = ($packageinfo["vendor"] != "" ? trim(preg_replace('/\s+/', "-", preg_replace('/[^a-zA-Z]/', " ", $packageinfo["vendor"])), "-") : "nova");
 if ($vendorappname === "") {
 	$vendorappname = "nova";

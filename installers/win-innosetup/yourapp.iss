@@ -182,8 +182,18 @@ Root: HKLM; Subkey: "SOFTWARE\Inno Setup MSIs"; Check: IsMSI; AfterInstall: Prep
 
 [Run]
 #ifdef PHP_32
+Filename: "{app}\php-32\php-win.exe"; Parameters: """{app}\support\post-install.php"""
 Filename: "{app}\php-32\php-win.exe"; Parameters: """{app}\{#AppBase}.phpapp"""; Description: "Launch application"; Check: (not Is64BitInstallMode) and HasRedistributables; Flags: postinstall nowait skipifsilent
 #endif
 #ifdef PHP_64
+Filename: "{app}\php-64\php-win.exe"; Parameters: """{app}\support\post-install.php"""
 Filename: "{app}\php-64\php-win.exe"; Parameters: """{app}\{#AppBase}.phpapp"""; Description: "Launch application"; Check: Is64BitInstallMode and HasRedistributables; Flags: postinstall nowait skipifsilent
+#endif
+
+[UninstallRun]
+#ifdef PHP_32
+Filename: "{app}\php-32\php-win.exe"; Parameters: """{app}\support\pre-uninstall.php"""
+#endif
+#ifdef PHP_64
+Filename: "{app}\php-64\php-win.exe"; Parameters: """{app}\support\pre-uninstall.php"""
 #endif
