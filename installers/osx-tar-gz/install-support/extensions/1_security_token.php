@@ -1,8 +1,9 @@
 <?php
 
 // Uses a one-time use security token to handle the rare case of crossing local user account boundaries.
+// (C) 2020 Mechanika Design.  All Rights Reserved.
 
-// The '1' prefix helps this extension to run before any other.
+// The '1' prefix helps this extension to run before other extensions.
 class Nova_Extension_1_security_token {
 	private $inittoken, $realtoken;
 
@@ -192,7 +193,6 @@ class Nova_Extension_1_security_token {
 	}
 
 	public function ServerDone() {
-
 	}
 }
 

@@ -1,16 +1,16 @@
 <?php
 
 // Nova support functions.
+// (C) 2020 Mechanika Design.  All Rights Reserved.
 
-function Nova_LoadServerExtensions() {
-	global $rootpath;
+function Nova_LoadServerExtensions($extspath) {
 
 	$serverexts = array();
-	$dir        = opendir($rootpath . "/extensions");
+	$dir        = opendir($extspath);
 	if ($dir !== false) {
 		while (($file = readdir($dir)) !== false) {
 			if (substr($file, - 4) === ".php") {
-				require_once $rootpath . "/extensions/" . $file;
+				require_once $extspath . "/" . $file;
 
 				$key              = substr($file, 0, - 4);
 				$classname        = "Nova_Extension_" . $key;
@@ -114,6 +114,12 @@ function Nova_StartServer($options) {
 	if (isset($options["quitdelay"]) && $options["quitdelay"] > 0) {
 		$cmd .= " " . escapeshellarg("-quit=" . $options["quitdelay"] * 60);
 	}
+	if (isset($options["exts"]) && is_string($options["exts"])) {
+		$cmd .= " " . escapeshellarg("-exts=" . $options["exts"]);
+	}
+	if (isset($options["www"]) && is_string($options["www"])) {
+		$cmd .= " " . escapeshellarg("-www=" . $options["www"]);
+	}
 
 	// Have the server write the results of its startup sequence to a file, which will contain the URL to point a web browser at on successful startup.
 	$sdir = sys_get_temp_dir();
@@ -178,10 +184,12 @@ function Nova_StartServer($options) {
 					"port"    => (int) $options["port"]
 				);
 			}
+		} else {
+			Nova_DisplayErrorDialog("Server Startup Error", "Unable to start the web server portion of " . $appname . ". Contact the developer of the application. Error 104", $sinfo);
 		}
-	} else {
-		Nova_DisplayErrorDialog("Server Startup Error", "Unable to start the web server portion of " . $appname . ". Contact the developer of the application. Error 104", $sinfo);
 	}
+
+	$sinfo["procinfo"] = $result;
 
 	return $sinfo;
 }
